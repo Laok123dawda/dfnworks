@@ -162,13 +162,19 @@ def solve_flow_on_graph(G, Pin, Pout, fluid_viscosity, phi):
 
     for u, v in nx.edges(G):
         # Find direction of flow
+
         if G.nodes[u]['pressure'] > G.nodes[v]['pressure']:
             upstream = u
             downstream = v
         elif G.nodes[v]['pressure'] >= G.nodes[u]['pressure']:
             upstream = v
             downstream = u
+        else:
+            error = 'something went wrong'
+            print(f"u: {u}, v: {v}, p(u): {G.nodes[u]['pressure']}, p(v) {G.nodes[v]['pressure']}.")
+            print(f"upstream: {upstream}, downstream: {downstream}.")
 
+            
         delta_p = G.nodes[upstream]['pressure'] - G.nodes[downstream]['pressure']
         if delta_p > 0:
             ## Create new edge in DiGraph
