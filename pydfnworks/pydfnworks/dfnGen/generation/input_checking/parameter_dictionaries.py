@@ -712,7 +712,7 @@ def load_parameters():
     mandatory = {
         'stopCondition', 'domainSize', 'numOfLayers', 'numOfRegions',
         'outputAllRadii', 'outputFinalRadiiPerFamily',
-        'outputAcceptedRadiiPerFamily', 'ecpmOutput', 'tripleIntersections',
+        'outputAcceptedRadiiPerFamily', 'tripleIntersections',
         'printRejectReasons', 'disableFram', 'visualizationMode', 'seed',
         'domainSizeIncrease', 'keepOnlyLargestCluster',
         'keepIsolatedFractures', 'ignoreBoundaryFaces', 'rejectsPerFracture',
