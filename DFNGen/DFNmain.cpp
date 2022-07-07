@@ -303,9 +303,8 @@ int main (int argc, char **argv) {
                 // Create/assign bounding box
                 createBoundingBox(newPoly);
                 // Find line of intersection and FRAM check
-                // rejectCode = intersectionChecking(newPoly, acceptedPoly, intPts, pstats, triplePoints);
-                // Find line of intersection and FRAM check
                 rejectCode = intersectionChecking(newPoly, acceptedPoly, intPts, pstats, triplePoints);
+                // Find line of intersection and FRAM check
 
 #ifdef TESTING
                 

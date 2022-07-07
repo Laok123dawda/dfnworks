@@ -98,33 +98,6 @@ void writeOutput(char* outputFolder, std::vector<Poly> &acceptedPoly, std::vecto
             writeAllAcceptedRadii_OfFamily(-3, acceptedPoly, radiiFolder);
         }
     }
-    
-    if (outputFinalRadiiPerFamily) {
-        std::cout << "Writing Final Radii Files Per Family\n";
-        int size = shapeFamilies.size();
-        
-        for (int i = 0; i < size; i++) {
-            writeFinalRadii_OfFamily(finalFractures, i, acceptedPoly, radiiFolder);
-        }
-        
-        if (userRectanglesOnOff) {
-            writeFinalRadii_OfFamily(finalFractures, -1, acceptedPoly, radiiFolder);
-        }
-        
-        if (userEllipsesOnOff) {
-            writeFinalRadii_OfFamily(finalFractures, -2, acceptedPoly, radiiFolder);
-        }
-        
-        if (userPolygonByCoord) {
-            writeFinalRadii_OfFamily(finalFractures, -3, acceptedPoly, radiiFolder);
-        }
-    }
-    
-    // If triple intersections are on, write triple intersection points file
-    if (tripleIntersections) {
-        std::cout << "Writing Triple Intersection Points File\n";
-        writeTriplePts(triplePoints, finalFractures, acceptedPoly, intPts, output);
-    }
 } // End writeOutput()
 
 
@@ -943,13 +916,15 @@ void writeShapeFams(std::vector<Shape> &shapeFamilies, std::string &output) {
     using namespace std;
     
     //TODO: add stub code in families.dat for userDefined fractures, IF there are user defined fractures
-
+    
     if (userEllipsesOnOff) {
         file << "UserDefined Ellipse Family: 0\n\n";
     }
+    
     if (userRectanglesOnOff) {
         file << "UserDefined Rectangle Family: -1\n\n";
-    }    
+    }
+    
     if (userPolygonByCoord) {
         file << "UserDefined Polygon Family: -2\n\n";
     }
