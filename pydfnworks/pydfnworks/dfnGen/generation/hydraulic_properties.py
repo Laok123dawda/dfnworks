@@ -394,7 +394,7 @@ def constant(params, variable, number_of_fractures):
 def dump_aperture(self, filename, format=None):
     if format is None:
         np.savetxt(filename, self.aperture)
-    elif format == "fehm":
+    elif format is "fehm":
         print(f"--> Writing {filename}")
         with open(filename, 'w+') as fp:
             fp.write('aperture\n')
@@ -406,7 +406,7 @@ def dump_perm(self, filename, format=None):
 
     if format is None:
         np.savetxt(filename, self.perm)
-    elif format == "fehm":
+    elif format is "fehm":
         # write perm file
         print(f"--> Writing {filename}")
         with open(filename, 'w+') as fp:
@@ -419,7 +419,7 @@ def dump_perm(self, filename, format=None):
 def dump_transmissivity(self, filename, format=None):
     if format is None:
         np.savetxt(filename, self.transmissivity)
-    elif format == "fehm":
+    elif format is "fehm":
         print(f"--> Writing {filename}")
         with open(filename, 'w+') as fp:
             fp.write('aperture\n')

@@ -147,13 +147,15 @@ class DFNWORKS(Frozen):
 
     def __del__(self):
         print("=" * 80)
-        #print(f"--> {self.local_jobname} completed/exited")
-        #elapsed = time() - self.start_time
-        #time_sec = elapsed
-        #time_min = elapsed / 60
-        #time_hrs = elapsed / 3600
-        #print(f"\n--> Total Run Time: {time_sec:.2e} seconds / {time_min:.2e} minutes / {time_hrs:.2e} hours")
+        print(f"--> {self.local_jobname} completed/exited")
+        elapsed = time() - self.start_time
+        time_sec = elapsed
+        time_min = elapsed / 60
+        time_hrs = elapsed / 3600
 
+        print(
+            f"\n--> Total Run Time: {time_sec:.2e} seconds / {time_min:.2e} minutes / {time_hrs:.2e} hours"
+        )
         output = '''
         \t\t\t*********************************************
         \t\t\t*   Thank you for using dfnWorks            *
