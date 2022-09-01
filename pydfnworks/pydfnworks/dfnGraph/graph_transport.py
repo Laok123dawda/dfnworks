@@ -19,7 +19,6 @@ import os
 # pydfnworks modules
 import pydfnworks.dfnGraph.graph_flow
 
-
 def create_neighbor_list(G):
     """ Create a list of downstream neighbor vertices for every vertex on NetworkX graph obtained after running graph_flow
 
