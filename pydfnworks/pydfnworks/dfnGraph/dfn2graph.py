@@ -147,7 +147,7 @@ def boundary_index(bc_name):
     try:
         return bc_dict[bc_name]
     except:
-        error = "Unknown boundary condition: %s\nExiting\n" % bc
+        error = f"Error. Unknown boundary condition: {bc_name} \nExiting\n"
         sys.stderr.write(error)
         sys.exit(1)
 
@@ -185,86 +185,78 @@ def create_intersection_graph(inflow,
     Aperture and Perm on edges can be added using add_app and add_perm functions
     """
 
-    print("Creating Graph Based on DFN")
-    print("Intersections being mapped to nodes and fractures to edges")
+    print("--> Creating Graph Based on DFN")
+    print("--> Intersections being mapped to nodes and fractures to edges")
     inflow_index = boundary_index(inflow)
     outflow_index = boundary_index(outflow)
 
-    f = open(intersection_file)
-    f.readline()
-    frac_edges = []
-    for line in f:
-        frac_edges.append(line.rstrip().split())
-    f.close()
-
-    # Tag mapping
+    # Load edges from intersection file
+    frac_edges = np.genfromtxt(intersection_file, skip_header = 1)
+    # Grab indices of internal edges
+    internal_edges = np.where(frac_edges[:,1] > 0)
+    # Grab indices of source edges
+    source_edges = np.where(frac_edges[:,1] == inflow_index)
+    # Grab indices of target edges
+    target_edges = np.where(frac_edges[:,1] == outflow_index)
+    # combine those indices from waht to keep
+    edges_to_keep = list(internal_edges[0]) + list(source_edges[0]) + list(target_edges[0])
+    # keep only the edges we care about 
+    frac_edges = frac_edges[edges_to_keep,:]
+    num_edges = len(frac_edges)
     G = nx.Graph(representation="intersection")
-    remove_list = []
-
-    # each edge in the DFN is a node in the graph
-    for i in range(len(frac_edges)):
-        f1 = int(frac_edges[i][0])
-        keep = True
-        if frac_edges[i][1] == 's' or frac_edges[i][1] == 't':
-            f2 = frac_edges[i][1]
-        elif int(frac_edges[i][1]) > 0:
-            f2 = int(frac_edges[i][1])
+    print("--> Adding Nodes to Graph")
+    for i in range(num_edges):
+        frac_1 = int(frac_edges[i][0])
+        if frac_edges[i][1]  > 0:
+            frac_2 = int(frac_edges[i][1])
         elif int(frac_edges[i][1]) == inflow_index:
-            f2 = 's'
+            frac_2 = 's'
         elif int(frac_edges[i][1]) == outflow_index:
-            f2 = 't'
-        elif int(frac_edges[i][1]) < 0:
-            keep = False
+            frac_2 = 't'
+        # note fractures of the intersection
+        G.add_node(i, frac = (frac_1, frac_2))
+        # keep intersection location and length
+        G.nodes[i]['x'] = float(frac_edges[i][2])
+        G.nodes[i]['y'] = float(frac_edges[i][3])
+        G.nodes[i]['z'] = float(frac_edges[i][4])
+        G.nodes[i]['length'] = float(frac_edges[i][5])
 
-        if keep:
-            # note fractures of the intersection
-            G.add_node(i, frac=(f1, f2))
-            # keep intersection location and length
-            G.nodes[i]['x'] = float(frac_edges[i][2])
-            G.nodes[i]['y'] = float(frac_edges[i][3])
-            G.nodes[i]['z'] = float(frac_edges[i][4])
-            G.nodes[i]['length'] = float(frac_edges[i][5])
+    print("--> Adding Nodes to Graph Complete")
+
+    print("--> Adding edges to Graph: Starting")
 
     nodes = list(nx.nodes(G))
-    f1 = nx.get_node_attributes(G, 'frac')
-    # identify which edges are on whcih fractures
-    for i in nodes:
-        e = set(f1[i])
-        for j in nodes:
-            if i != j:
-                tmp = set(f1[j])
-                x = e.intersection(tmp)
-                if len(x) > 0:
-                    x = list(x)[0]
-                    # Check for Boundary Intersections
-                    # This stops boundary fractures from being incorrectly
-                    # connected
-                    # If not, add edge between
-                    if x != 's' and x != 't':
-                        xi = G.nodes[i]['x']
-                        yi = G.nodes[i]['y']
-                        zi = G.nodes[i]['z']
-
-                        xj = G.nodes[j]['x']
-                        yj = G.nodes[j]['y']
-                        zj = G.nodes[j]['z']
-
-                        distance = np.sqrt((xi - xj)**2 + (yi - yj)**2 +
-                                           (zi - zj)**2)
-                        G.add_edge(i, j, frac=x, length=distance)
-
+    fractures = nx.get_node_attributes(G, 'frac')
     # Add Sink and Source nodes
     G.add_node('s')
     G.add_node('t')
 
+    # identify which edges are on which fractures
     for i in nodes:
-        e = set(f1[i])
-        if len(e.intersection(set('s'))) > 0 or len(e.intersection(set(
-            [-1]))) > 0:
-            G.add_edge(i, 's', frac='s', length=0.0)
-        if len(e.intersection(set('t'))) > 0 or len(e.intersection(set(
-            [-2]))) > 0:
-            G.add_edge(i, 't', frac='t', length=0.0)
+        node_1_fracs = fractures[i]
+        for j in nodes[i+1:]:
+            frac_int = list(set(node_1_fracs).intersection(set(fractures[j])))
+            # print(i,j,frac_int)
+            # Check if the intersection is empty
+            if len(frac_int) > 0:
+                # Check for source and target
+                if 's' in frac_int:
+                    G.add_edge(i, 's', frac='s', length = 0.0)
+                    frac_int.remove('s')
+
+                if 't' in frac_int:
+                    G.add_edge(i, 't', frac='t', length = 0.0)
+                    frac_int.remove('t')
+
+                # if there is anything left, that's what we want
+                if len(frac_int) > 0:
+                    distance = np.sqrt(
+                                (G.nodes[i]['x'] - G.nodes[j]['x'])**2 + 
+                                (G.nodes[i]['y'] - G.nodes[j]['y'])**2 +
+                                (G.nodes[i]['z'] - G.nodes[j]['z'])**2 )
+                    G.add_edge(i, j, frac = frac_int[0], length = distance)
+
+    print("--> Adding edges to Graph: Complete")
     add_perm(G, fracture_info)
     print("Graph Construction Complete")
     return G
@@ -851,7 +843,7 @@ def load_json_graph(self, name):
             NetworkX Graph based on the DFN
 """
 
-    print("Loading Graph in file: " + name + ".json")
+    print(f"Loading Graph in file: {name}.json")
     fp = open(name + '.json')
     G = json_graph.node_link_graph(json.load(fp))
     print("Complete")
@@ -903,7 +895,7 @@ def add_perm(G, fracture_info="fracture_info.dat"):
     elif G.graph['representation'] == "bipartite":
         # add fracture info
         with open(fracture_info) as f:
-            header = f.readline()
+            f.readline()
             data = f.read().strip()
             for fracture, line in enumerate(data.split('\n'), 1):
                 c, perm, aperture = line.split(' ')
